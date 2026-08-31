@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Image, Alert } from 'react-native';
-import { Text, Avatar, Button, ActivityIndicator, IconButton } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { supabase } from '../lib/supabase';
-import { format, startOfWeek } from 'date-fns';
-import { id } from 'date-fns/locale';
+import React, { useState, useEffect } from 'react';// PLUGIN REACT NATIVE PAPER
+import { View, StyleSheet, ScrollView, RefreshControl, Image, Alert } from 'react-native';// PLUGIN REACT NATIVE PAPER
+import { Text, Avatar, Button, ActivityIndicator, IconButton } from 'react-native-paper';// SAFE AREA CONTEXT
+import { useSafeAreaInsets } from 'react-native-safe-area-context';// SUPABASE
+import { supabase } from '../lib/supabase';// DATE-FNS
+import { format, startOfWeek } from 'date-fns';// LOCALE BAHASA INDONESIA
+import { id } from 'date-fns/locale';// MAIN COMPONENT
 
+// DASHBOARD SCREEN
 export default function DashboardScreen({ jumpTo }: any) {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,7 @@ export default function DashboardScreen({ jumpTo }: any) {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const now = new Date();
+      const now = new Date();// Tanggal Awal Hari Ini, Minggu Ini, Bulan Ini
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const startOfWeekDate = startOfWeek(now, { weekStartsOn: 1 }).toISOString(); // Senin
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -39,7 +40,7 @@ export default function DashboardScreen({ jumpTo }: any) {
         supabase.from('guests').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
         supabase.from('guests').select('*').order('created_at', { ascending: false }).limit(1).single()
       ]);
-
+      // Update State
       setStats({
         today: resToday.count || 0,
         week: resWeek.count || 0,
@@ -83,7 +84,8 @@ export default function DashboardScreen({ jumpTo }: any) {
         </View>
         <IconButton icon="logout" iconColor="#EF4444" size={24} onPress={handleLogout} />
       </View>
-
+      
+      //  SCROLLVIEW DENGAN REFRESH CONTROL
       <ScrollView 
         contentContainerStyle={{ padding: 20 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchStats} colors={['#10B981']} />}
@@ -93,7 +95,7 @@ export default function DashboardScreen({ jumpTo }: any) {
         <View style={styles.gridRow}>
           <StatCard 
             title="Hari Ini" 
-            count={stats.today} 
+            count={stats.today} // Jumlah Hari Ini
             icon="account-check-outline" // Icon Orang
             color="#10B981" // Hijau
             bgColor="#D1FAE5" 
@@ -101,7 +103,7 @@ export default function DashboardScreen({ jumpTo }: any) {
           <View style={{width: 12}} />
           <StatCard 
             title="Minggu Ini" 
-            count={stats.week} 
+            count={stats.week} // Jumlah Minggu Ini
             icon="calendar-week" // Icon Kalender
             color="#059669" // Hijau Tua
             bgColor="#ECFDF5" 
@@ -111,7 +113,7 @@ export default function DashboardScreen({ jumpTo }: any) {
         <View style={styles.gridRow}>
           <StatCard 
             title="Bulan Ini" 
-            count={stats.month} 
+            count={stats.month} // Jumlah Bulan Ini
             icon="chart-line" // Icon Grafik
             color="#F59E0B" // Kuning/Orange
             bgColor="#FEF3C7" 
@@ -119,7 +121,7 @@ export default function DashboardScreen({ jumpTo }: any) {
           <View style={{width: 12}} />
           <StatCard 
             title="Total" 
-            count={stats.total} 
+            count={stats.total} // Jumlah Total
             icon="poll" // Icon Bar Chart
             color="#3B82F6" // Biru
             bgColor="#DBEAFE" 
@@ -153,6 +155,7 @@ export default function DashboardScreen({ jumpTo }: any) {
           <Text style={{ color: '#9CA3AF', textAlign: 'center', marginTop: 10 }}>Belum ada data tamu.</Text>
         )}
 
+        // CTA BUTTON INPUT TAMU BARU
         <Button mode="contained" onPress={() => jumpTo('input')} style={styles.ctaButton} buttonColor="#10B981">
           + Input Tamu Baru
         </Button>
@@ -161,6 +164,7 @@ export default function DashboardScreen({ jumpTo }: any) {
   );
 }
 
+// === 4. STYLESHEET ===
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
@@ -183,11 +187,13 @@ const styles = StyleSheet.create({
     // Shadow halus
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1
   },
+  // Style Icon Box
   iconBox: { 
     width: 48, height: 48, borderRadius: 12, 
     justifyContent: 'center', alignItems: 'center', 
     marginRight: 12 
   },
+  // Style Konten Teks
   statContent: { flex: 1 },
   statValue: { fontSize: 24, fontWeight: 'bold', color: '#111827', lineHeight: 32 },
   statLabel: { fontSize: 12, color: '#6B7280', fontWeight: '500' },

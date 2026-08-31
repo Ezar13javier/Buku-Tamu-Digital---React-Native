@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { TextInput, Button, Text, Title, HelperText } from 'react-native-paper';
-import { supabase } from '../lib/supabase';
+import React, { useState } from 'react'; // Import React dan useState
+import { View, StyleSheet, Alert } from 'react-native'; // Import komponen dasar dari React Native
+import { TextInput, Button, Text, Title, HelperText } from 'react-native-paper';// Import komponen dari React Native Paper
+import { supabase } from '../lib/supabase';// Import instance Supabase
 
+// Komponen LoginScreen
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false); // Mode Login atau Register
+  const [email, setEmail] = useState('');// State untuk email
+  const [password, setPassword] = useState('');// State untuk password
+  const [loading, setLoading] = useState(false);// State untuk loading
+  const [isRegistering, setIsRegistering] = useState(false); // State untuk mode register
 
   // Fungsi Login
   async function handleLogin() {
@@ -18,7 +19,7 @@ export default function LoginScreen() {
     });
 
     if (error) Alert.alert('Login Gagal', error.message);
-    setLoading(false);
+    setLoading(false);// Set loading ke false setelah proses selesai
   }
 
   // Fungsi Register (Daftar Admin Baru)
@@ -29,6 +30,7 @@ export default function LoginScreen() {
       password: password,
     });
 
+    // Tampilkan pesan sesuai hasil pendaftaran
     if (error) {
       Alert.alert('Register Gagal', error.message);
     } else {
@@ -38,12 +40,14 @@ export default function LoginScreen() {
     setLoading(false);
   }
 
+  // Render UI
   return (
     <View style={styles.container}>
       <Title style={styles.title}>
         {isRegistering ? 'Daftar Admin Baru' : 'Login Admin Desa'}
       </Title>
       
+      // Input Email
       <TextInput
         label="Email"
         value={email}
@@ -55,6 +59,7 @@ export default function LoginScreen() {
         left={<TextInput.Icon icon="email" />}
       />
       
+      // Input Password
       <TextInput
         label="Password"
         value={password}
@@ -65,10 +70,12 @@ export default function LoginScreen() {
         left={<TextInput.Icon icon="lock" />}
       />
       
+      // Informasi Bantuan
       <HelperText type="info" visible={true}>
         {isRegistering ? 'Password minimal 6 karakter' : 'Masukan akun admin balai desa'}
       </HelperText>
 
+      // Tombol Login atau Daftar
       <Button 
         mode="contained" 
         onPress={isRegistering ? handleRegister : handleLogin} 
@@ -78,6 +85,7 @@ export default function LoginScreen() {
         {isRegistering ? 'Daftar Sekarang' : 'Masuk'}
       </Button>
 
+      // Tombol untuk beralih antara Login dan Register
       <Button 
         mode="text" 
         onPress={() => setIsRegistering(!isRegistering)}
@@ -89,6 +97,7 @@ export default function LoginScreen() {
   );
 }
 
+// Gaya untuk komponen
 const styles = StyleSheet.create({
   container: {
     flex: 1,

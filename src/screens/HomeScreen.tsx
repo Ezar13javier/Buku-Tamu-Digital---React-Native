@@ -1,30 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react';// Import React dan useState
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy'; // Tetap pakai legacy
-import { decode } from 'base64-arraybuffer';
-import { supabase } from '../lib/supabase';
+import { TextInput, Button, Text } from 'react-native-paper';// Import komponen dari React Native Paper
+import { useSafeAreaInsets } from 'react-native-safe-area-context';// Import hook untuk safe area
+import * as ImagePicker from 'expo-image-picker';// Import modul ImagePicker
+import * as FileSystem from 'expo-file-system/legacy'; // Import modul FileSystem
+import { decode } from 'base64-arraybuffer';// Import fungsi decode untuk base64
+import { supabase } from '../lib/supabase';// Import instance Supabase
 
+// Komponen HomeScreen
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(false);
-  
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [purpose, setPurpose] = useState('');
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();// Dapatkan insets untuk safe area
+  const [loading, setLoading] = useState(false);// State untuk loading
+  const [name, setName] = useState('');// State untuk nama tamu
+  const [phone, setPhone] = useState('');// State untuk nomor HP tamu
+  const [address, setAddress] = useState('');// State untuk alamat tamu
+  const [purpose, setPurpose] = useState('');// State untuk keperluan tamu
+  const [photoUri, setPhotoUri] = useState<string | null>(null);// State untuk URI foto tamu
 
   // === FUNGSI BUKA KAMERA ===
   const openCamera = async () => {
     try {
+      // Minta izin akses kamera
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (permission.status !== 'granted') {
         return Alert.alert("Izin Ditolak", "Mohon buka Pengaturan HP > Aplikasi > Expo Go > Izin > Izinkan Kamera.");
       }
-
+      
+      // Buka kamera untuk ambil foto
       const result = await ImagePicker.launchCameraAsync({
         // KITA KEMBALIKAN KE 'MediaTypeOptions' AGAR TIDAK ERROR
         mediaTypes: ImagePicker.MediaTypeOptions.Images, 
@@ -32,6 +34,7 @@ export default function HomeScreen() {
         quality: 0.5,
       });
 
+      // Jika tidak dibatalkan, simpan URI foto
       if (!result.canceled) setPhotoUri(result.assets[0].uri);
     } catch (error: any) {
       Alert.alert("Error Kamera", error.message); 
@@ -41,11 +44,13 @@ export default function HomeScreen() {
   // === FUNGSI BUKA GALERI ===
   const openGallery = async () => {
     try {
+      // Minta izin akses galeri
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permission.status !== 'granted') {
         return Alert.alert("Izin Ditolak", "Mohon izinkan akses galeri di pengaturan HP.");
       }
 
+      // Buka galeri untuk pilih foto
       const result = await ImagePicker.launchImageLibraryAsync({
         // KITA KEMBALIKAN KE 'MediaTypeOptions' AGAR TIDAK ERROR
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -53,6 +58,7 @@ export default function HomeScreen() {
         quality: 0.5,
       });
 
+      // Jika tidak dibatalkan, simpan URI foto
       if (!result.canceled) setPhotoUri(result.assets[0].uri);
     } catch (error: any) {
       Alert.alert("Error Galeri", error.message);
@@ -72,17 +78,19 @@ export default function HomeScreen() {
   const handleSubmit = async () => {
     if (!name || !purpose) return Alert.alert('Peringatan', 'Nama dan Keperluan wajib diisi!');
     setLoading(true);
-    
+    // Simpan data tamu ke Supabase
     try {
       let publicUrl = null;
-
+      // Jika ada foto, unggah ke storage Supabase
       if (photoUri) {
         const fileName = `guest_${Date.now()}.jpg`;
-        
+
+        // Baca file foto sebagai base64
         const base64 = await FileSystem.readAsStringAsync(photoUri, {
           encoding: FileSystem.EncodingType.Base64,
         });
 
+        // Unggah file ke Supabase Storage
         const { error: uploadError } = await supabase.storage
           .from('guest-photos')
           .upload(fileName, decode(base64), {
@@ -90,19 +98,23 @@ export default function HomeScreen() {
             upsert: false
           });
 
+        // Tangani error unggahan
         if (uploadError) throw uploadError;
 
+        // Dapatkan URL publik file yang diunggah
         const { data } = supabase.storage.from('guest-photos').getPublicUrl(fileName);
         publicUrl = data.publicUrl;
       }
 
+      // Simpan data tamu ke tabel 'guests'
       const { error } = await supabase.from('guests').insert([{
         name, phone, address, purpose, photo_url: publicUrl,
         admin_email: (await supabase.auth.getUser()).data.user?.email
       }]);
-
+      // Tangani error penyimpanan data
       if (error) throw error;
 
+      // Berhasil simpan data
       Alert.alert("Sukses", "Data tamu tersimpan!");
       setName(''); setPhone(''); setAddress(''); setPurpose(''); setPhotoUri(null);
 
@@ -114,10 +126,12 @@ export default function HomeScreen() {
     }
   };
 
+  // Komponen Label Input
   const Label = ({ text }: { text: string }) => (
     <Text style={{ marginBottom: 6, fontWeight: '600', color: '#374151', fontSize: 14 }}>{text}</Text>
   );
 
+  // Render UI
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -125,6 +139,7 @@ export default function HomeScreen() {
         <Text style={styles.headerSubtitle}>Masukkan data pengunjung balai desa</Text>
       </View>
       
+      // Form Input Data Tamu
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
           <View style={styles.formCard}>
@@ -142,26 +157,27 @@ export default function HomeScreen() {
               )}
             </View>
 
+            // Input Nama Lengkap
             <View style={styles.inputGroup}>
               <Label text="Nama Lengkap *" />
               <TextInput value={name} onChangeText={setName} mode="outlined" style={styles.input} outlineColor="#E5E7EB" activeOutlineColor="#10B981" />
             </View>
-
+            // Input Nomor HP
             <View style={styles.inputGroup}>
               <Label text="Nomor HP *" />
               <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" mode="outlined" style={styles.input} outlineColor="#E5E7EB" activeOutlineColor="#10B981" />
             </View>
-
+            // Input Alamat
             <View style={styles.inputGroup}>
               <Label text="Alamat *" />
               <TextInput value={address} onChangeText={setAddress} mode="outlined" multiline numberOfLines={2} style={[styles.input, {height: 60}]} outlineColor="#E5E7EB" activeOutlineColor="#10B981" />
             </View>
-
+            // Input Keperluan
             <View style={styles.inputGroup}>
               <Label text="Keperluan *" />
               <TextInput value={purpose} onChangeText={setPurpose} mode="outlined" multiline numberOfLines={3} style={[styles.input, { height: 80 }]} outlineColor="#E5E7EB" activeOutlineColor="#10B981" />
             </View>
-
+            // Tombol Simpan Data Tamu
             <Button mode="contained" onPress={handleSubmit} loading={loading} style={styles.submitBtn} buttonColor="#10B981" contentStyle={{ height: 48 }}>
               Simpan Data Tamu
             </Button>
@@ -172,6 +188,7 @@ export default function HomeScreen() {
   );
 }
 
+// Gaya untuk komponen
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { padding: 20, paddingBottom: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },

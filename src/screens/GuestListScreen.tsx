@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
+// GUEST LIST SCREEN
 export default function GuestListScreen() {
   const [guests, setGuests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,7 @@ export default function GuestListScreen() {
     setLoading(false);
   };
 
+  // Fetch data saat komponen mount & saat searchQuery berubah (dengan debounce)
   useEffect(() => { const t = setTimeout(fetchGuests, 500); return () => clearTimeout(t); }, [searchQuery]);
   const onRefresh = useCallback(() => { fetchGuests(); }, []);
 
@@ -45,18 +47,21 @@ export default function GuestListScreen() {
     ]);
   };
 
+  // === LOGIC EDIT ===
   const openEditModal = (item: any) => {
     setEditingGuest(item);
     setEditName(item.name); setEditPhone(item.phone || ''); setEditAddress(item.address || ''); setEditPurpose(item.purpose || '');
     setEditModalVisible(true);
   };
 
+  // Simpan Edit
   const handleSaveEdit = async () => {
     setEditLoading(true);
     await supabase.from('guests').update({ name: editName, phone: editPhone, address: editAddress, purpose: editPurpose }).eq('id', editingGuest.id);
     setEditLoading(false); setEditModalVisible(false); fetchGuests();
   };
 
+  // === FUNGSI BUKA WHATSAPP ===
   const openWA = (phone: string) => {
     if (phone) Linking.openURL(`https://wa.me/${phone.replace(/^0/, '62').replace(/\D/g, '')}`);
   };
@@ -64,27 +69,27 @@ export default function GuestListScreen() {
   // === RENDER ITEM ===
   const renderItem = ({ item }: any) => (
     <View style={styles.card}>
-      <View style={styles.cardHeader}>
+      <View style={styles.cardHeader}>// HEADER KARTU
         {item.photo_url ? <Image source={{ uri: item.photo_url }} style={styles.avatar} /> : 
         <View style={styles.avatarPlaceholder}><Text style={styles.avatarText}>{item.name[0]}</Text></View>}
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
           <Text style={styles.date}>{format(new Date(item.created_at), 'dd MMM • HH:mm', { locale: id })}</Text>
         </View>
-        <View style={{flexDirection:'row'}}>
+        <View style={{flexDirection:'row'}}>// TOMBOL EDIT & HAPUS
           <IconButton icon="pencil-outline" size={20} iconColor="#F59E0B" onPress={() => openEditModal(item)} style={{margin:0}} />
           <IconButton icon="trash-can-outline" size={20} iconColor="#EF4444" onPress={() => handleDelete(item.id)} style={{margin:0}} />
         </View>
       </View>
-      <Divider style={{ marginVertical: 10, backgroundColor: '#F3F4F6' }} />
+      <Divider style={{ marginVertical: 10, backgroundColor: '#F3F4F6' }} />// PEMBATAS
       <View style={{ gap: 10 }}>
-        <View style={styles.infoRow}>
+        <View style={styles.infoRow}>// KEPERLUAN
           <View style={[styles.iconBox, { backgroundColor: '#E0F2FE' }]}>
             <Avatar.Icon size={18} icon="briefcase-outline" color="#0284C7" style={{backgroundColor:'transparent'}} />
           </View>
           <View style={{flex: 1}}><Text style={styles.label}>Keperluan</Text><Text style={styles.value}>{item.purpose}</Text></View>
         </View>
-        {item.phone && (
+        {item.phone && (// WHATSAPP
           <TouchableOpacity onPress={() => openWA(item.phone)} style={styles.infoRow}>
             <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
               <Avatar.Icon size={18} icon="whatsapp" color="#16A34A" style={{backgroundColor:'transparent'}} />
@@ -92,7 +97,7 @@ export default function GuestListScreen() {
             <View style={{flex: 1}}><Text style={styles.label}>WhatsApp</Text><Text style={[styles.value, {color:'#16A34A', fontWeight:'bold'}]}>{item.phone}</Text></View>
           </TouchableOpacity>
         )}
-        {item.address && (
+        {item.address && (// ALAMAT
           <View style={styles.infoRow}>
             <View style={[styles.iconBox, { backgroundColor: '#F3F4F6' }]}>
               <Avatar.Icon size={18} icon="map-marker-outline" color="#4B5563" style={{backgroundColor:'transparent'}} />
@@ -104,6 +109,7 @@ export default function GuestListScreen() {
     </View>
   );
 
+  // === RENDER ===
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}> 
       <View style={styles.pageHeader}>
@@ -114,10 +120,11 @@ export default function GuestListScreen() {
       </View>
       <FlatList data={guests} keyExtractor={i => i.id} renderItem={renderItem} contentContainerStyle={{ padding: 16, paddingBottom: 80 }} refreshing={loading} onRefresh={onRefresh} ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30, color: '#9CA3AF' }}>Tidak ada data.</Text>} />
       
+      // MODAL EDIT DATA
       <Portal>
         <Modal visible={editModalVisible} onDismiss={() => setEditModalVisible(false)} contentContainerStyle={styles.modalContainer}>
           <Text style={styles.modalTitle}>Edit Data</Text>
-          <ScrollView>
+          <ScrollView>// FORM EDIT
             <TextInput label="Nama" value={editName} onChangeText={setEditName} mode="outlined" style={styles.input} />
             <TextInput label="HP" value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" mode="outlined" style={styles.input} />
             <TextInput label="Alamat" value={editAddress} onChangeText={setEditAddress} mode="outlined" style={styles.input} />
@@ -133,6 +140,7 @@ export default function GuestListScreen() {
   );
 }
 
+// === 4. STYLESHEET ===
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   pageHeader: { padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },

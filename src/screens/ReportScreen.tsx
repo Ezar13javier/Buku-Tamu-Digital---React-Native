@@ -130,7 +130,7 @@ export default function ReportScreen() {
         style={[styles.optionCard, isSelected && styles.optionCardSelected]} 
         onPress={() => setPeriod(value as any)}
       >
-
+        // Radio Button
         <RadioButton.Android 
           value={value} 
           status={isSelected ? 'checked' : 'unchecked'} 
